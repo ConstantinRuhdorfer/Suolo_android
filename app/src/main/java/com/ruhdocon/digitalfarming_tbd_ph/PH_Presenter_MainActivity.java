@@ -1,7 +1,9 @@
 package com.ruhdocon.digitalfarming_tbd_ph;
 
+import android.annotation.TargetApi;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
@@ -26,74 +28,6 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
     private ActionBar toolbar;
 
-    public void getPhValue() {
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-
-                List<Double> ph_Values = new ArrayList<Double>();
-
-                URL phValues_EndPoint = null;
-                try {
-                    phValues_EndPoint = new URL("http://192.168.33.155:8080/PHvalues");
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    assert phValues_EndPoint != null;
-                    HttpURLConnection phValues_connection = (HttpURLConnection) phValues_EndPoint.openConnection();
-                    phValues_connection.setRequestProperty("Accept", "application/JSON");
-                    phValues_connection.setRequestMethod("GET");
-
-                    if (phValues_connection.getResponseCode() == 200) {
-                        InputStream responseBody = phValues_connection.getInputStream();
-                        InputStreamReader phValues_responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
-                        JsonReader jsonReader = new JsonReader(phValues_responseBodyReader);
-
-                        jsonReader.beginObject();
-
-                        Log.i("JSON PH", jsonReader.toString());
-
-                        /*
-                        while (jsonReader.hasNext()) {
-                            String key = jsonReader.nextName();
-                            if (key.equals("_embedded")) {
-                                jsonReader.beginObject();
-                                key = jsonReader.nextName();
-                                if (key.equals("PHvalues")) {
-                                    jsonReader.beginArray();
-                                    while (jsonReader.hasNext()) {
-                                        ph_Values.add(jsonReader.nextDouble());
-                                    }
-                                    jsonReader.endArray();
-
-                                    for( Double d: ph_Values ) {
-                                        Log.i("VALUES", d.toString());
-                                    }
-                                    Log.i("length_phValues", "" + ph_Values.size() );
-
-                            }
-                                break;
-                            } else {
-                                jsonReader.skipValue();
-                            }
-                        }
-                        */
-
-                        jsonReader.close();
-                        phValues_connection.disconnect();
-                    } else {
-                        Log.i("PHVALUE", "ERROR");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,7 +40,6 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
 
-        getPhValue();
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -143,5 +76,262 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
     @Override
     public void onFragmentInteraction(Uri uri) {
 
+    }
+
+    public void getPhValue() {
+
+        AsyncTask.execute(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.N)
+            @Override
+            public void run() {
+
+                List<Double> ph_Values = new ArrayList<>();
+
+                URL phValues_EndPoint = null;
+                try {
+                    phValues_EndPoint = new URL("http://192.168.33.155:8080/Ph_value");
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    assert phValues_EndPoint != null;
+                    HttpURLConnection phValues_connection = (HttpURLConnection) phValues_EndPoint.openConnection();
+                    phValues_connection.setRequestProperty("Accept", "application/JSON");
+                    phValues_connection.setRequestMethod("GET");
+
+                    if (phValues_connection.getResponseCode() == 200) {
+                        InputStream responseBody = phValues_connection.getInputStream();
+                        InputStreamReader phValues_responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
+                        JsonReader jsonReader = new JsonReader(phValues_responseBodyReader);
+
+                        jsonReader.beginObject();
+
+                        while (jsonReader.hasNext()) {
+                            String key = jsonReader.nextName();
+                            if (key.equals("_embedded")) {
+                                jsonReader.beginObject();
+                                key = jsonReader.nextName();
+                                if (key.equals("Ph_value")) {
+                                    jsonReader.beginArray();
+                                    while (jsonReader.hasNext()) {
+                                        jsonReader.beginObject();
+                                        while(jsonReader.hasNext()) {
+                                            key = jsonReader.nextName();
+                                            if (key.equals("toxic")) {
+                                                ph_Values.add(jsonReader.nextDouble());
+                                            } else if ( key.equals("_links") ) {
+
+                                                jsonReader.beginObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.endObject();
+
+                                            } else if ( key.equals("date") ) {
+                                                jsonReader.nextString();
+                                                // TODO USE THE DATE
+                                            }
+                                        }
+                                        jsonReader.endObject();
+                                    }
+                                    jsonReader.endArray();
+                                }
+                                break;
+                            } else {
+                                jsonReader.skipValue();
+                            }
+                        }
+                        jsonReader.close();
+                        phValues_connection.disconnect();
+                    } else {
+                        // TODO TELL FRAGMENT THERE IS NO PH VALUE
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void getTemperature() {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                List<Long> temperature_values = new ArrayList<Long>();
+
+                URL phValues_EndPoint = null;
+                try {
+                    phValues_EndPoint = new URL("http://192.168.33.155:8080/Temperature_value");
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    assert phValues_EndPoint != null;
+                    HttpURLConnection phValues_connection = (HttpURLConnection) phValues_EndPoint.openConnection();
+                    phValues_connection.setRequestProperty("Accept", "application/JSON");
+                    phValues_connection.setRequestMethod("GET");
+
+                    if (phValues_connection.getResponseCode() == 200) {
+                        InputStream responseBody = phValues_connection.getInputStream();
+                        InputStreamReader phValues_responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
+                        JsonReader jsonReader = new JsonReader(phValues_responseBodyReader);
+
+                        jsonReader.beginObject();
+
+                        while (jsonReader.hasNext()) {
+                            String key = jsonReader.nextName();
+                            if (key.equals("_embedded")) {
+                                jsonReader.beginObject();
+                                key = jsonReader.nextName();
+                                if (key.equals("Temperature_value")) {
+                                    jsonReader.beginArray();
+                                    while (jsonReader.hasNext()) {
+
+
+                                        jsonReader.beginObject();
+                                        while(jsonReader.hasNext()) {
+                                            key = jsonReader.nextName();
+                                            if (key.equals("temperature")) {
+                                                temperature_values.add(jsonReader.nextLong());
+                                            } else if (key.equals("_links")) {
+                                                jsonReader.beginObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.endObject();
+                                            } else if (key.equals("date")) {
+                                                // TODO DEAL WITH THE DATE
+                                                jsonReader.nextString();
+                                            }
+                                        }
+                                        jsonReader.endObject();
+
+
+                                    }
+                                    jsonReader.endArray();
+                                }
+                                break;
+                            } else {
+                                jsonReader.skipValue();
+                            }
+                        }
+                        jsonReader.close();
+                        phValues_connection.disconnect();
+                    } else {
+                        // TODO TELL THE FRAGMENT THERE IS NO INFO
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
+    public void getAirpressure() {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                List<Long> airpressure_values = new ArrayList<Long>();
+
+                URL phValues_EndPoint = null;
+                try {
+                    phValues_EndPoint = new URL("http://192.168.33.155:8080/Airpressure_value");
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    assert phValues_EndPoint != null;
+                    HttpURLConnection phValues_connection = (HttpURLConnection) phValues_EndPoint.openConnection();
+                    phValues_connection.setRequestProperty("Accept", "application/JSON");
+                    phValues_connection.setRequestMethod("GET");
+
+                    if (phValues_connection.getResponseCode() == 200) {
+                        InputStream responseBody = phValues_connection.getInputStream();
+                        InputStreamReader phValues_responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
+                        JsonReader jsonReader = new JsonReader(phValues_responseBodyReader);
+
+                        jsonReader.beginObject();
+
+                        while (jsonReader.hasNext()) {
+                            String key = jsonReader.nextName();
+                            if (key.equals("_embedded")) {
+                                jsonReader.beginObject();
+                                key = jsonReader.nextName();
+                                if (key.equals("Airpressure_value")) {
+                                    jsonReader.beginArray();
+                                    while (jsonReader.hasNext()) {
+
+
+                                        jsonReader.beginObject();
+                                        while(jsonReader.hasNext()) {
+                                            key = jsonReader.nextName();
+                                            if (key.equals("pressure")) {
+                                                airpressure_values.add(jsonReader.nextLong());
+                                            } else if (key.equals("_links")) {
+                                                jsonReader.beginObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.nextName();
+                                                jsonReader.beginObject();
+                                                jsonReader.nextName();
+                                                jsonReader.nextString();
+                                                jsonReader.endObject();
+
+                                                jsonReader.endObject();
+                                            } else if (key.equals("date")) {
+                                                // TODO DEAL WITH THE DATE
+                                                jsonReader.nextString();
+                                            }
+                                        }
+                                        jsonReader.endObject();
+
+
+                                    }
+                                    jsonReader.endArray();
+                                }
+                                break;
+                            } else {
+                                jsonReader.skipValue();
+                            }
+                        }
+                        jsonReader.close();
+                        phValues_connection.disconnect();
+                    } else {
+                        // TODO TELL THE FRAGMENT THERE IS NO INFO
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
     }
 }
