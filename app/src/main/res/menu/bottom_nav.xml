@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/tab_recent"
+        android:icon="@drawable/ic_access_time_black_24dp"
+        android:title="@string/title_recent" />
+
+    <item
+        android:id="@+id/tab_analysis"
+        android:icon="@drawable/ic_trending_up_black_24dp"
+        android:title="@string/title_analysis" />
+
+    <item
+        android:id="@+id/tab_info"
+        android:icon="@drawable/ic_info_outline_black_24dp"
+        android:title="@string/title_info" />
+
+</menu>

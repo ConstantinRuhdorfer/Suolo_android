@@ -1,11 +1,17 @@
 package com.ruhdocon.digitalfarming_tbd_ph;
 
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.JsonReader;
 import android.util.Log;
+import android.view.MenuItem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +22,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PH_Presenter_MainActivity extends AppCompatActivity {
+public class PH_Presenter_MainActivity extends AppCompatActivity implements Analysis.OnFragmentInteractionListener, Recent.OnFragmentInteractionListener, Tips.OnFragmentInteractionListener {
+
+    private ActionBar toolbar;
 
     public void getPhValue() {
 
@@ -91,11 +99,49 @@ public class PH_Presenter_MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ph__presenter__main);
 
-        Toolbar toolbar = findViewById(R.id.navigation_supportBar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        loadFragment(new Recent());
+
+        toolbar = getSupportActionBar();
+        BottomNavigationView navigation = findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
 
         getPhValue();
     }
 
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
+
+
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            Fragment fragment;
+            switch (item.getItemId()) {
+                case R.id.tab_analysis:
+                    fragment = new Analysis();
+                    loadFragment(fragment);
+                    return true;
+                case R.id.tab_info:
+                    fragment = new Tips();
+                    loadFragment(fragment);
+                    return true;
+                case R.id.tab_recent:
+                    fragment = new Recent();
+                    loadFragment(fragment);
+                    return true;
+                }
+            return false;
+        }
+    };
+
+    private void loadFragment(Fragment fragment) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.frame_container, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 }
