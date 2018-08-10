@@ -2,6 +2,7 @@
 package com.ruhdocon.digitalfarming_tbd_ph;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -132,7 +134,7 @@ public class Analysis extends Fragment {
     }
 
     private void setUpChart (float[] data) {
-        LineChart chart = (LineChart) Objects.requireNonNull(getView()).findViewById(R.id.chartView);
+        LineChart lineChart = (LineChart) Objects.requireNonNull(getView()).findViewById(R.id.chartView);
         List<Entry> entries = new ArrayList<>();
         int i = 0;
         for (Float f : data) {
@@ -143,8 +145,30 @@ public class Analysis extends Fragment {
         dataSet.setColor(R.color.redGauge);
         dataSet.setValueTextColor(R.color.white);
 
+        dataSet.setLabel("PH Values");
+
         LineData lineData = new LineData(dataSet);
-        chart.setData(lineData);
-        chart.invalidate();
+
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet.setDrawValues(false);
+        dataSet.setLineWidth(1f);
+        dataSet.setCircleRadius(1f);
+        dataSet.setCircleHoleRadius(0);
+        dataSet.setColor(Color.BLACK);
+        dataSet.setCircleColor(Color.BLACK);
+        dataSet.setHighLightColor(Color.BLACK);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.setPinchZoom(true);
+        lineChart.getLegend().setForm(Legend.LegendForm.LINE);
+        lineChart.getXAxis().setDrawGridLines(false);
+        lineChart.getAxisLeft().setAxisMaximum(14f);
+        lineChart.getAxisRight().setAxisMaximum(14f);
+        lineChart.getAxisLeft().setAxisMinimum(0f);
+        lineChart.getAxisRight().setAxisMinimum(0f);
+        lineChart.getAxisLeft().setDrawGridLines(false);
+        lineChart.setData(lineData);
+        lineChart.setNoDataText("Sorry there is no data.");
+        lineChart.invalidate();
     }
 }
