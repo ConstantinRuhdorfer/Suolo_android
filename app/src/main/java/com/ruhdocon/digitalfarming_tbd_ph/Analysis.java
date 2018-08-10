@@ -5,9 +5,19 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -19,6 +29,10 @@ import android.view.ViewGroup;
  * create an instance of this fragment.
  */
 public class Analysis extends Fragment {
+
+
+    float[] phValues_data;
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -59,13 +73,23 @@ public class Analysis extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        Bundle bundle = this.getArguments();
+        phValues_data = bundle.getFloatArray("Ph_values");
+
         return inflater.inflate(R.layout.fragment_analysis, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        setUpChart(phValues_data);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -105,5 +129,22 @@ public class Analysis extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    private void setUpChart (float[] data) {
+        LineChart chart = (LineChart) Objects.requireNonNull(getView()).findViewById(R.id.chartView);
+        List<Entry> entries = new ArrayList<>();
+        int i = 0;
+        for (Float f : data) {
+            i++;
+            entries.add( new Entry(i, f) );
+        }
+        LineDataSet dataSet = new LineDataSet(entries, "Label");
+        dataSet.setColor(R.color.redGauge);
+        dataSet.setValueTextColor(R.color.white);
+
+        LineData lineData = new LineData(dataSet);
+        chart.setData(lineData);
+        chart.invalidate();
     }
 }
