@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Analysis">
 
     <android.support.constraint.ConstraintLayout
@@ -12,8 +13,12 @@
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chartView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_width="300dp"
+            android:layout_height="400dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 
