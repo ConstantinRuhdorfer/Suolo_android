@@ -2,7 +2,10 @@ package com.ruhdocon.digitalfarming_tbd_ph;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -10,8 +13,14 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.JsonReader;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +30,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import pl.pawelkleczkowski.customgauge.CustomGauge;
 
 public class PH_Presenter_MainActivity extends AppCompatActivity implements Analysis.OnFragmentInteractionListener, Recent.OnFragmentInteractionListener, Tips.OnFragmentInteractionListener {
 
     private ActionBar toolbar;
+    private List<Float> phValues;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,19 +50,29 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
+        phValues = new ArrayList<>();
+
         fillViewWithData();
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             Fragment fragment;
             switch (item.getItemId()) {
                 case R.id.tab_analysis:
+                    Bundle bundle = new Bundle();
+                    float[] phValuesArray = new float[phValues.size()];
+                    int i = 0;
+                    for (Float f : phValues) {
+                        phValuesArray[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
+                    }
+                    bundle.putFloatArray("Ph_values",  phValuesArray);
                     fragment = new Analysis();
+                    fragment.setArguments(bundle);
                     loadFragment(fragment);
+
                     return true;
                 case R.id.tab_info:
                     fragment = new Tips();
@@ -58,6 +81,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                 case R.id.tab_recent:
                     fragment = new Recent();
                     loadFragment(fragment);
+                    fillViewWithData();
                     return true;
             }
             return false;
@@ -82,7 +106,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
             URL phValues_EndPoint = null;
             try {
-                phValues_EndPoint = new URL("http://192.168.33.155:8080/Ph_value");
+                phValues_EndPoint = new URL("http://192.168.33.155:8080/Ph_value/?size=100000000");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -112,27 +136,8 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                                         key = jsonReader.nextName();
                                         if (key.equals("toxic")) {
                                             ph_Values.add((float) jsonReader.nextDouble());
-                                        } else if (key.equals("_links")) {
-
-                                            jsonReader.beginObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.endObject();
-
-                                        } else if (key.equals("date")) {
-                                            jsonReader.nextString();
-                                            // TODO USE THE DATE
+                                        } else {
+                                            jsonReader.skipValue();
                                         }
                                     }
                                     jsonReader.endObject();
@@ -172,7 +177,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
             URL phValues_EndPoint = null;
             try {
-                phValues_EndPoint = new URL("http://192.168.33.155:8080/Temperature_value");
+                phValues_EndPoint = new URL("http://192.168.33.155:8080/Temperature_value/?size=100000000");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -197,37 +202,16 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                             if (key.equals("Temperature_value")) {
                                 jsonReader.beginArray();
                                 while (jsonReader.hasNext()) {
-
-
                                     jsonReader.beginObject();
                                     while(jsonReader.hasNext()) {
                                         key = jsonReader.nextName();
                                         if (key.equals("temperature")) {
                                             temperature_values.add(jsonReader.nextLong());
-                                        } else if (key.equals("_links")) {
-                                            jsonReader.beginObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.endObject();
-                                        } else if (key.equals("date")) {
-                                            // TODO DEAL WITH THE DATE
-                                            jsonReader.nextString();
+                                        } else {
+                                            jsonReader.skipValue();
                                         }
                                     }
                                     jsonReader.endObject();
-
-
                                 }
                                 jsonReader.endArray();
                             }
@@ -264,7 +248,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
             URL phValues_EndPoint = null;
             try {
-                phValues_EndPoint = new URL("http://192.168.33.155:8080/Airpressure_value");
+                phValues_EndPoint = new URL("http://192.168.33.155:8080/Airpressure_value/?size=100000000");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -296,25 +280,8 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                                         key = jsonReader.nextName();
                                         if (key.equals("pressure")) {
                                             airpressure_values.add(jsonReader.nextLong());
-                                        } else if (key.equals("_links")) {
-                                            jsonReader.beginObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.endObject();
-                                        } else if (key.equals("date")) {
-                                            // TODO DEAL WITH THE DATE
-                                            jsonReader.nextString();
+                                        } else {
+                                            jsonReader.skipValue();
                                         }
                                     }
                                     jsonReader.endObject();
@@ -355,7 +322,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
             URL phValues_EndPoint = null;
             try {
-                phValues_EndPoint = new URL("http://192.168.33.155:8080/Humidity_value");
+                phValues_EndPoint = new URL("http://192.168.33.155:8080/Humidity_value/?size=100000000");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -380,37 +347,16 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                             if (key.equals("Humidity_value")) {
                                 jsonReader.beginArray();
                                 while (jsonReader.hasNext()) {
-
-
                                     jsonReader.beginObject();
                                     while(jsonReader.hasNext()) {
                                         key = jsonReader.nextName();
                                         if (key.equals("humidity")) {
                                             humidity_values.add(jsonReader.nextLong());
-                                        } else if (key.equals("_links")) {
-                                            jsonReader.beginObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.endObject();
-                                        } else if (key.equals("date")) {
-                                            // TODO DEAL WITH THE DATE
-                                            jsonReader.nextString();
+                                        } else {
+                                            jsonReader.skipValue();
                                         }
                                     }
                                     jsonReader.endObject();
-
-
                                 }
                                 jsonReader.endArray();
                             }
@@ -446,7 +392,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
 
             URL phValues_EndPoint = null;
             try {
-                phValues_EndPoint = new URL("http://192.168.33.155:8080/Light_value");
+                phValues_EndPoint = new URL("http://192.168.33.155:8080/Light_value/?size=100000000");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -468,7 +414,7 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                         if (key.equals("_embedded")) {
                             jsonReader.beginObject();
                             key = jsonReader.nextName();
-                            if (key.equals("Humidity_value")) {
+                            if (key.equals("Light_value")) {
                                 jsonReader.beginArray();
                                 while (jsonReader.hasNext()) {
 
@@ -478,30 +424,11 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
                                         key = jsonReader.nextName();
                                         if (key.equals("lux")) {
                                             light_values.add(jsonReader.nextLong());
-                                        } else if (key.equals("_links")) {
-                                            jsonReader.beginObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.nextName();
-                                            jsonReader.beginObject();
-                                            jsonReader.nextName();
-                                            jsonReader.nextString();
-                                            jsonReader.endObject();
-
-                                            jsonReader.endObject();
-                                        } else if (key.equals("date")) {
-                                            // TODO DEAL WITH THE DATE
-                                            jsonReader.nextString();
+                                        } else {
+                                            jsonReader.skipValue();
                                         }
                                     }
                                     jsonReader.endObject();
-
-
                                 }
                                 jsonReader.endArray();
                             }
@@ -531,29 +458,63 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
     }
 
     private void processLight_values(List<Long> result) {
-        TextView light_Value_TextView = findViewById(R.id.temp_info);
-        light_Value_TextView.setText( result.get(result.size() - 1).toString() );
+        if ( result.size() != 0 ) {
+            TextView light_Value_TextView = findViewById(R.id.lumen_info);
+            light_Value_TextView.setText( result.get(result.size() - 1 ).toString() + " lux" );
+        } else {
+            TextView light_Value_TextView = findViewById(R.id.lumen_info);
+            light_Value_TextView.setText("- lux" );
+        }
+
     }
 
     private void processHumidity_values(List<Long> result) {
-        TextView humidity_Value_TextView = findViewById(R.id.temp_info);
-        humidity_Value_TextView.setText( result.get(result.size() - 1).toString() );
+        if ( result.size() != 0 ) {
+            TextView humidity_Value_TextView = findViewById(R.id.humadity_info);
+            humidity_Value_TextView.setText( result.get(result.size() - 1).toString() + " %");
+        } else {
+            TextView humidity_Value_TextView = findViewById(R.id.humadity_info);
+            humidity_Value_TextView.setText("- %");
+        }
+
     }
 
     private void processAirpressure_values(List<Long> result) {
-        TextView airpressure_Value_TextView = findViewById(R.id.temp_info);
-        airpressure_Value_TextView.setText( result.get(result.size() - 1).toString() );
+        if ( result.size() != 0 ) {
+            TextView airpressure_Value_TextView = findViewById(R.id.pressure_info);
+            airpressure_Value_TextView.setText( result.get(result.size() - 1).toString() + " hPa");
+        } else {
+            TextView airpressure_Value_TextView = findViewById(R.id.pressure_info);
+            airpressure_Value_TextView.setText("- hPa");
+        }
+
     }
 
     private void processTemperature_values(List<Long> result) {
-        TextView temperature_Value_TextView = findViewById(R.id.temp_info);
-        temperature_Value_TextView.setText( result.get(result.size() - 1).toString() );
+        if ( result.size() != 0 ) {
+            TextView temperature_Value_TextView = findViewById(R.id.temp_info);
+            temperature_Value_TextView.setText( result.get(result.size() - 1).toString() + " °C" );
+        } else {
+            TextView temperature_Value_TextView = findViewById(R.id.temp_info);
+            temperature_Value_TextView.setText( "- °C" );
+        }
+
     }
 
     private void processPh_values(List<Float> result) {
-        // TODO CHECK THAT
-        TextView PH_Value_TextView = (TextView)findViewById(R.id.Ph_Value);
-        PH_Value_TextView.setText( result.get(result.size() - 1).toString() );
+
+        if ( result.size() != 0) {
+            TextView PH_Value_TextView = (TextView)findViewById(R.id.Ph_Value);
+            PH_Value_TextView.setText( result.get(result.size() - 1).toString() );
+            CustomGauge ph_Barometer = findViewById(R.id.ph_Barometer);
+            ph_Barometer.setValue( Math.round(result.get(result.size() - 1) * 10) );
+            phValues = result;
+        } else {
+            TextView PH_Value_TextView = (TextView)findViewById(R.id.Ph_Value);
+            PH_Value_TextView.setText( "-" );
+            CustomGauge ph_Barometer = findViewById(R.id.ph_Barometer);
+            ph_Barometer.setValue( 0 );
+        }
     }
 
     private void fillViewWithData() {
@@ -563,4 +524,5 @@ public class PH_Presenter_MainActivity extends AppCompatActivity implements Anal
         new humidity_valuesTask().execute();
         new light_valuesTask().execute();
     }
+
 }
